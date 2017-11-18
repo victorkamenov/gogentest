@@ -1,6 +1,3 @@
-//go:generate go run gen.go
-//go:generate go run main.go
-
 package main
 
 import (
@@ -17,9 +14,10 @@ import (
 var lastOut []byte
 
 func main() {
-	replace()
+begin:
+	//replace()
 	lastOut, _ = ioutil.ReadFile("out")
-	f, err := os.Create("main.go")
+	f, err := os.Create("sub/main.go")
 	die(err)
 	defer f.Close()
 
@@ -27,14 +25,13 @@ func main() {
 	_, werror := f.WriteString(program)
 	die(werror)
 
+	executeCmd("go", "run", "sub/main.go", string(lastOut), time.Now().Format(time.ANSIC))
+	goto begin
 }
 
 func getBody() string {
 
-	return `
-
-	fmt.Println("my LAST OUTPUT WAS:  ` + fmt.Sprintf("%s", lastOut) + `")
-	` + getOut()
+	return "fmt.Println(\"" + fmt.Sprintf("my last args were %s", lastOut) + "\") " + getOut()
 }
 
 func die(err error) {
@@ -45,7 +42,6 @@ func die(err error) {
 
 func getPost() string {
 	return `
-	executeCmd("go", "generate")
 }
 
 func executeCmd(command string, args ...string) {
@@ -103,8 +99,6 @@ func executeCmd(command string, args ...string) {
 
 func getPre() string {
 	return `
-//go:generate go run gen.go
-//go:generate go run main.go ` + fmt.Sprintf("%s", lastOut) + " " + time.Now().Format(time.ANSIC) + `
 package main
 			
 import ("fmt"
